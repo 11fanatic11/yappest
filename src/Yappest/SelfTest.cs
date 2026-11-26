@@ -123,6 +123,46 @@ public static class SelfTest
                 Check("game icon is fetched and cached for Minecraft", icon != null && File.Exists(icon) && new FileInfo(icon).Length > 2000, icon ?? "none");
             }
 
+            // ---- folder import: nested folders, mixed file types, unreadable files
+            {
+                var root = Path.Combine(AppContext.BaseDirectory, "folder-test-" + Guid.NewGuid().ToString("N"));   // not under %TEMP%, which AddSound treats as scratch space
+                Directory.CreateDirectory(Path.Combine(root, "sub", "deep"));
+                void Wav(string p)
+                {
+                    using var w = new WaveFileWriter(p, new WaveFormat(44100, 16, 1));
+                    var b = new byte[44100]; for (int i = 0; i < b.Length / 2; i++) BitConverter.GetBytes((short)(8000 * Math.Sin(i * 0.05))).CopyTo(b, i * 2);
+                    w.Write(b, 0, b.Length);
+                }
+                Wav(Path.Combine(root, "a.wav"));
+                Wav(Path.Combine(root, "sub", "deep", "B.WAV"));
+                ClipRecorder.WriteMp3(Path.Combine(root, "sub", "c.mp3"), Tone(300, 0.3f, 48000 * 2));
+                File.WriteAllText(Path.Combine(root, "notes.txt"), "not audio");
+                File.WriteAllBytes(Path.Combine(root, "sub", "pic.png"), new byte[100]);
+                var junk = new byte[5000]; new Random(9).NextBytes(junk);
+                File.WriteAllBytes(Path.Combine(root, "bad.mp3"), junk);
+                File.WriteAllBytes(Path.Combine(root, "sub", "broken.ogg"), junk);
+
+                var lib = SoundLibrary.Instance; lib.Load();
+                var found = SoundLibrary.FindSounds(root);
+                Check("folder scan finds every supported file in nested folders", found.Count == 5 && found.Any(ff => ff.EndsWith("B.WAV")) && !found.Any(ff => ff.EndsWith(".txt") || ff.EndsWith(".png")), $"{found.Count} found");
+
+                int before = Directory.GetFiles(AppPaths.SoundsDir).Length;
+                var board = lib.AddBoard("selftest-folder");
+                int added = 0, rejected = 0;
+                foreach (var ff in found) { if (lib.AddSound(board, ff, null, save: false) != null) added++; else rejected++; }
+                lib.Save();
+                int after = Directory.GetFiles(AppPaths.SoundsDir).Length;
+                Check("readable sounds are imported and unreadable ones leave nothing behind", added == 3 && rejected == 2 && after - before == 3, $"added {added}, rejected {rejected}, new files {after - before}");
+                Check("imported sounds are named after their files and have a duration", board.Sounds.Select(s => s.Name).OrderBy(x => x).SequenceEqual(new[] { "a", "B", "c" }) && board.Sounds.All(s => s.DurationSeconds > 0.4),
+                    string.Join(", ", board.Sounds.Select(s => $"{s.Name} {s.DurationSeconds:0.0}s")));
+                var already = lib.ImportedSources();
+                Check("re-importing the same folder would skip what's already there", found.Count(ff => already.Contains(ff)) == 3);
+
+                lib.RemoveBoard(board);
+                Directory.Delete(root, true);
+                Check("test board and files are cleaned up", Directory.GetFiles(AppPaths.SoundsDir).Length == before);
+            }
+
             // ---- ring buffer
             var ring = new FloatRing(1000);
             ring.Write(Enumerable.Range(0, 1500).Select(i => (float)i).ToArray());

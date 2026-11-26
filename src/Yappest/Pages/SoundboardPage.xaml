@@ -77,6 +77,12 @@
             <StackPanel Grid.Column="1" Orientation="Horizontal" Margin="12,0,0,0">
                 <Button Style="{StaticResource GhostButton}" Content="Stop all" Click="StopAll_Click" Margin="0,0,6,0"/>
                 <Button x:Name="BoardMenuBtn" Style="{StaticResource IconButton}" Content="&#xE712;" Click="BoardMenu_Click" ToolTip="Rename or delete this board" Margin="0,0,10,0"/>
+                <Button Click="AddFolder_Click" Margin="0,0,8,0" ToolTip="Import every sound in a folder, including its subfolders">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock Text="&#xED25;" Style="{StaticResource Glyph}" FontSize="13" Margin="0,0,8,0"/>
+                        <TextBlock Text="Add folder"/>
+                    </StackPanel>
+                </Button>
                 <Button Style="{StaticResource AccentButton}" Click="AddSound_Click">
                     <StackPanel Orientation="Horizontal">
                         <TextBlock Text="&#xE710;" Style="{StaticResource Glyph}" FontSize="13" Foreground="{DynamicResource AccentFgBrush}" Margin="0,0,8,0"/>
@@ -109,13 +115,16 @@
                 <StackPanel x:Name="Empty" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,80,0,0" Visibility="Collapsed">
                     <TextBlock Text="&#xE8D6;" Style="{StaticResource Glyph}" FontSize="40" Foreground="{StaticResource TextFaint}"/>
                     <TextBlock Text="Nothing here yet" FontSize="16" FontWeight="SemiBold" Margin="0,14,0,0" HorizontalAlignment="Center"/>
-                    <TextBlock Text="Drop mp3, wav, ogg or mp4 files anywhere on this page." Style="{StaticResource Dim}" Margin="0,6,0,0"/>
+                    <TextBlock Text="Drop mp3, wav, ogg or mp4 files, or whole folders, anywhere on this page." Style="{StaticResource Dim}" Margin="0,6,0,0"/>
                 </StackPanel>
             </Grid>
         </ScrollViewer>
 
         <Border x:Name="Busy" Grid.RowSpan="2" Background="#99000000" Visibility="Collapsed">
-            <TextBlock x:Name="BusyText" Text="Adding…" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="15"/>
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock x:Name="BusyText" Text="Adding…" HorizontalAlignment="Center" TextAlignment="Center" FontSize="15" TextTrimming="CharacterEllipsis" MaxWidth="560"/>
+                <Button x:Name="CancelBtn" Content="Stop" Click="CancelImport_Click" HorizontalAlignment="Center" Margin="0,16,0,0" Padding="22,8" Visibility="Collapsed"/>
+            </StackPanel>
         </Border>
     </Grid>
 </UserControl>

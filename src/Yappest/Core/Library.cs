@@ -21,6 +21,7 @@ public class SoundItem : INotifyPropertyChanged
     public string? Icon { get => _icon; set { _icon = value; Raise(nameof(Icon)); Raise(nameof(IconPath)); Raise(nameof(HasIcon)); } }
     public double Volume { get; set; } = 1.0;
     public double DurationSeconds { get; set; }
+    public string? Source { get; set; }                          // where it was imported from (to skip duplicates on re-import)
 
     [JsonIgnore] public string IconPath => ImageUtil.IconPath(Icon);
     [JsonIgnore] public bool HasIcon => !string.IsNullOrEmpty(Icon) && System.IO.File.Exists(IconPath);
@@ -100,9 +101,37 @@ public sealed class SoundLibrary
         return AudioExtensions.Contains(e) || VideoExtensions.Contains(e);
     }
 
-    /// <summary>Copy an audio file into the library (video files get their audio track extracted to mp3).</summary>
-    public SoundItem? AddSound(Board board, string sourcePath, string? name = null)
+    /// <summary>Every sound or video file under a folder, however deep. Unreadable folders and shortcuts/links are skipped.</summary>
+    public static List<string> FindSounds(string folder)
     {
+        var opts = new EnumerationOptions
+        {
+            RecurseSubdirectories = true,
+            IgnoreInaccessible = true,
+            AttributesToSkip = FileAttributes.System | FileAttributes.ReparsePoint,   // no system files, no symlink loops
+            MatchCasing = MatchCasing.CaseInsensitive,
+        };
+        try
+        {
+            return Directory.EnumerateFiles(folder, "*.*", opts)
+                .Where(IsSupported)
+                .OrderBy(f => f, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+        }
+        catch (Exception ex) { Log.Warn($"scan {folder}: {ex.Message}"); return new(); }
+    }
+
+    /// <summary>Source files already imported (so importing the same folder twice doesn't duplicate everything).</summary>
+    public HashSet<string> ImportedSources() =>
+        Boards.SelectMany(b => b.Sounds).Select(s => s.Source).Where(s => !string.IsNullOrEmpty(s)).Select(s => s!).ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+    /// <summary>
+    /// Copy an audio file into the library (video files get their audio track extracted to mp3).
+    /// Returns null when the file can't be read as audio. Pass save:false when adding many and call Save() once at the end.
+    /// </summary>
+    public SoundItem? AddSound(Board board, string sourcePath, string? name = null, bool save = true)
+    {
+        string? written = null;
         try
         {
             var ext = Path.GetExtension(sourcePath).ToLowerInvariant();
@@ -110,12 +139,14 @@ public sealed class SoundLibrary
             if (VideoExtensions.Contains(ext))
             {
                 fileName = Guid.NewGuid().ToString("N") + ".mp3";
-                ExtractAudioToMp3(sourcePath, Path.Combine(AppPaths.SoundsDir, fileName));
+                written = Path.Combine(AppPaths.SoundsDir, fileName);
+                ExtractAudioToMp3(sourcePath, written);
             }
             else if (AudioExtensions.Contains(ext))
             {
                 fileName = Guid.NewGuid().ToString("N") + ext;
-                File.Copy(sourcePath, Path.Combine(AppPaths.SoundsDir, fileName), true);
+                written = Path.Combine(AppPaths.SoundsDir, fileName);
+                File.Copy(sourcePath, written, true);
             }
             else return null;
 
@@ -123,15 +154,25 @@ public sealed class SoundLibrary
             {
                 Name = string.IsNullOrWhiteSpace(name) ? Path.GetFileNameWithoutExtension(sourcePath) : name!,
                 File = fileName,
+                Source = sourcePath.StartsWith(Path.GetTempPath(), StringComparison.OrdinalIgnoreCase) ? null : sourcePath,
             };
             item.DurationSeconds = Audio.SoundCache.ProbeDuration(item.FullPath);
-            System.Windows.Application.Current.Dispatcher.Invoke(() => board.Sounds.Add(item));
-            Save();
+            if (item.DurationSeconds <= 0.05)       // not decodable: don't leave a dead tile behind
+            {
+                TryDelete(written);
+                return null;
+            }
+
+            var dispatcher = System.Windows.Application.Current?.Dispatcher;
+            if (dispatcher == null || dispatcher.CheckAccess()) board.Sounds.Add(item);
+            else dispatcher.Invoke(() => board.Sounds.Add(item));
+            if (save) Save();
             return item;
         }
         catch (Exception ex)
         {
             Log.Error("add sound " + sourcePath, ex);
+            if (written != null) TryDelete(written);
             return null;
         }
     }

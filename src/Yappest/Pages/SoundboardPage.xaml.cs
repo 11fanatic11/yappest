@@ -134,26 +134,105 @@ public partial class SoundboardPage : UserControl
             Multiselect = true,
             Filter = "Audio and video|*.mp3;*.wav;*.ogg;*.mp4;*.m4v;*.mov|Audio|*.mp3;*.wav;*.ogg|Video (audio is extracted)|*.mp4;*.m4v;*.mov",
         };
-        if (dlg.ShowDialog() == true) _ = AddFilesAsync(dlg.FileNames);
+        if (dlg.ShowDialog() == true) _ = ImportPathsAsync(dlg.FileNames);
     }
 
-    async Task AddFilesAsync(IEnumerable<string> files)
+    void AddFolder_Click(object sender, RoutedEventArgs e)
     {
+        var dlg = new OpenFolderDialog { Title = "Choose folders to import (subfolders are searched too)", Multiselect = true };
+        if (dlg.ShowDialog() == true) _ = ImportPathsAsync(dlg.FolderNames);
+    }
+
+    CancellationTokenSource? _cts;
+    void CancelImport_Click(object sender, RoutedEventArgs e) { _cts?.Cancel(); BusyText.Text = "Stopping…"; }
+
+    /// <summary>
+    /// Imports files and/or folders. Folders are searched, including every subfolder, for mp3, wav, ogg, mp4, m4v and mov;
+    /// files that were imported from the same place before are skipped.
+    /// </summary>
+    async Task ImportPathsAsync(IEnumerable<string> paths)
+    {
+        if (_cts != null) return;                       // one import at a time
+        var owner = Window.GetWindow(this);
         var board = _board ?? _lib.Boards.First();
-        var list = files.Where(SoundLibrary.IsSupported).ToList();
-        if (list.Count == 0) return;
+        var cts = _cts = new CancellationTokenSource();
+
         Busy.Visibility = Visibility.Visible;
-        int done = 0, failed = 0;
-        foreach (var f in list)
+        CancelBtn.Visibility = Visibility.Collapsed;
+        BusyText.Text = "Looking for sounds…";
+
+        var direct = new List<string>();
+        var found = new List<string>();
+        int folderCount = 0, subfolders = 0;
+        await Task.Run(() =>
         {
-            BusyText.Text = list.Count > 1 ? $"Adding {++done} of {list.Count}…" : "Adding…";
-            var item = await Task.Run(() => _lib.AddSound(board, f));
-            if (item == null) failed++;
+            foreach (var p in paths)
+            {
+                if (Directory.Exists(p))
+                {
+                    folderCount++;
+                    found.AddRange(SoundLibrary.FindSounds(p));
+                    try { subfolders += Directory.EnumerateDirectories(p, "*", new EnumerationOptions { RecurseSubdirectories = true, IgnoreInaccessible = true, AttributesToSkip = FileAttributes.ReparsePoint }).Count(); } catch { }
+                }
+                else if (File.Exists(p) && SoundLibrary.IsSupported(p)) direct.Add(p);
+            }
+        });
+
+        var already = _lib.ImportedSources();
+        var fromFolders = found.Distinct(StringComparer.OrdinalIgnoreCase).Where(f => !direct.Contains(f, StringComparer.OrdinalIgnoreCase)).ToList();
+        var fresh = fromFolders.Where(f => !already.Contains(f)).ToList();
+        int skippedDuplicates = fromFolders.Count - fresh.Count;
+        var queue = direct.Concat(fresh).ToList();
+
+        if (queue.Count == 0)
+        {
+            Busy.Visibility = Visibility.Collapsed; _cts = null;
+            if (folderCount > 0)
+                PromptDialog.Info(owner, "Nothing new to add",
+                    fromFolders.Count == 0 ? "No mp3, wav, ogg, mp4, m4v or mov files were found in that folder or its subfolders."
+                                           : $"All {fromFolders.Count} sounds in there are already in your soundboard.");
+            return;
         }
+
+        // folders can hold thousands of files: say what's about to happen before doing it
+        if (folderCount > 0)
+        {
+            Busy.Visibility = Visibility.Collapsed;
+            var where = folderCount == 1 ? "that folder" : $"those {folderCount} folders";
+            var sub = subfolders > 0 ? $" (searched {subfolders} subfolder{(subfolders == 1 ? "" : "s")} too)" : "";
+            var dup = skippedDuplicates > 0 ? $" {skippedDuplicates} that you've already imported will be skipped." : "";
+            bool big = queue.Count > 200;
+            if (!PromptDialog.Confirm(owner, $"Add {queue.Count} sound{(queue.Count == 1 ? "" : "s")}?",
+                    $"Found {queue.Count} sounds in {where}{sub}. They'll be copied into “{board.Name}”, named after their files.{dup}" +
+                    (big ? " That's a lot, so it may take a while. You can stop it at any time." : ""), "Add them"))
+            { _cts = null; return; }
+            Busy.Visibility = Visibility.Visible;
+        }
+
+        CancelBtn.Visibility = Visibility.Visible;
+        int added = 0, failed = 0, n = 0;
+        var failedNames = new List<string>();
+        foreach (var f in queue)
+        {
+            if (cts.IsCancellationRequested) break;
+            BusyText.Text = $"Adding {++n} of {queue.Count}…\n{Path.GetFileName(f)}";
+            var item = await Task.Run(() => _lib.AddSound(board, f, null, save: false));
+            if (item == null) { failed++; if (failedNames.Count < 5) failedNames.Add(Path.GetFileName(f)); } else added++;
+        }
+        if (added > 0) _lib.Save();                     // one save for the whole batch
+
+        bool cancelled = cts.IsCancellationRequested;
+        _cts = null;
         Busy.Visibility = Visibility.Collapsed;
         UpdateEmpty();
-        if (failed > 0)
-            PromptDialog.Info(Window.GetWindow(this), "Some files couldn't be added", $"{failed} file(s) couldn't be read. If it's a video, make sure it has an audio track.");
+
+        if (failed > 0 || cancelled || folderCount > 0)
+        {
+            var lines = new List<string> { $"Added {added} sound{(added == 1 ? "" : "s")} to “{board.Name}”." };
+            if (cancelled) lines.Add($"Stopped early, {queue.Count - n} not processed.");
+            if (failed > 0) lines.Add($"{failed} couldn't be read as audio ({string.Join(", ", failedNames)}{(failed > failedNames.Count ? ", …" : "")}). For videos, check they have an audio track.");
+            PromptDialog.Info(owner, cancelled ? "Import stopped" : "Import finished", string.Join(" ", lines));
+        }
     }
 
     void Page_DragOver(object sender, DragEventArgs e)
@@ -164,6 +243,6 @@ public partial class SoundboardPage : UserControl
 
     void Page_Drop(object sender, DragEventArgs e)
     {
-        if (e.Data.GetData(DataFormats.FileDrop) is string[] files) _ = AddFilesAsync(files);
+        if (e.Data.GetData(DataFormats.FileDrop) is string[] files) _ = ImportPathsAsync(files);
     }
 }

@@ -101,7 +101,9 @@ public static class SoundCache
         {
             if (Path.GetExtension(path).Equals(".ogg", StringComparison.OrdinalIgnoreCase))
             {
-                using var v = new VorbisWaveReader(path);
+                // own the stream: when the file isn't valid Vorbis the reader throws without releasing it, and the file couldn't be deleted
+                using var fs = File.OpenRead(path);
+                using var v = new VorbisWaveReader(fs);
                 return v.TotalTime.TotalSeconds;
             }
             using var m = new MediaFoundationReader(path);
