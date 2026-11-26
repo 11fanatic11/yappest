@@ -11,7 +11,7 @@
     <RootNamespace>Yappest</RootNamespace>
     <ApplicationIcon>Assets\yappest.ico</ApplicationIcon>
     <ApplicationManifest>app.manifest</ApplicationManifest>
-    <Version>0.2.0</Version>
+    <Version>0.2.1</Version>
     <IncludeSourceRevisionInInformationalVersion>false</IncludeSourceRevisionInInformationalVersion>
     <Company>Yappest</Company>
     <Product>Yappest</Product>

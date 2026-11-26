@@ -11,7 +11,9 @@ namespace Yappest;
 
 public partial class App : System.Windows.Application
 {
-    const string PipeName = "Yappest.ShowWindow";
+    // a throwaway profile (YAPPEST_DATA) gets its own lock, so test runs never collide with the real, installed Yappest
+    static readonly string Profile = Environment.GetEnvironmentVariable("YAPPEST_DATA") is { Length: > 0 } d ? "." + Convert.ToHexString(System.Security.Cryptography.SHA1.HashData(System.Text.Encoding.UTF8.GetBytes(d)))[..8] : "";
+    static readonly string PipeName = "Yappest.ShowWindow" + Profile;
     static Mutex? _mutex;
     MainWindow? _main;
     bool _quitting;
@@ -38,7 +40,7 @@ public partial class App : System.Windows.Application
             return 0;
         }
 
-        _mutex = new Mutex(true, "Yappest.SingleInstance", out bool first);
+        _mutex = new Mutex(true, "Yappest.SingleInstance" + Profile, out bool first);
         if (!first)
         {
             try

@@ -21,7 +21,11 @@ public partial class SettingsPage : UserControl
     {
         InitializeComponent();
         BuildSwatches();
-        Loaded += (_, _) => { Fill(); _poll.Start(); };
+        Loaded += (_, _) =>
+        {
+            Fill(); _poll.Start();
+            if (Environment.GetEnvironmentVariable("YAPPEST_SCROLL_END") != null) Dispatcher.BeginInvoke(DispatcherPriority.Background, () => Scroller.ScrollToEnd());   // screenshots only
+        };
         Unloaded += (_, _) => _poll.Stop();
         _poll.Tick += (_, _) => RefreshStatuses();
         Settings.Changed += () => Dispatcher.BeginInvoke(RefreshToggles);
@@ -395,6 +399,12 @@ public partial class SettingsPage : UserControl
                 UpdateNote.Text = "Couldn't check right now: " + r.Error;
                 break;
         }
+    }
+
+    void Link_Navigate(object sender, System.Windows.Navigation.RequestNavigateEventArgs e)
+    {
+        try { Process.Start(new ProcessStartInfo(e.Uri.AbsoluteUri) { UseShellExecute = true }); } catch { }
+        e.Handled = true;
     }
 
     void Logs_Click(object sender, RoutedEventArgs e) =>

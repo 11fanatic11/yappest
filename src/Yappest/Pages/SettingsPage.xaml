@@ -35,7 +35,7 @@
         </Style>
     </UserControl.Resources>
 
-    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32,4,24,28">
+    <ScrollViewer x:Name="Scroller" VerticalScrollBarVisibility="Auto" Padding="32,4,24,28">
         <StackPanel MaxWidth="820" HorizontalAlignment="Left">
 
             <!-- ============ AUDIO ============ -->
@@ -289,8 +289,13 @@
                     <StackPanel>
                         <TextBlock Text="Yappest" Style="{StaticResource RowTitle}"/>
                         <TextBlock Text="Free voice changer, soundboard and clipper." Style="{StaticResource Dim}" FontSize="12" Margin="0,2,0,0"/>
+                        <TextBlock Style="{StaticResource Dim}" FontSize="12" Margin="0,8,120,0" TextWrapping="Wrap">
+                            <Run Text="The Yappest Input microphone is built on "/>
+                            <Hyperlink NavigateUri="https://vb-cable.com" RequestNavigate="Link_Navigate" Foreground="{DynamicResource AccentBrush}">VB-CABLE</Hyperlink>
+                            <Run Text=", a donationware virtual audio device by VB-Audio Software. Donations to VB-Audio are welcome. Yappest isn't affiliated with or endorsed by VB-Audio."/>
+                        </TextBlock>
                     </StackPanel>
-                    <Button Content="Open log folder" Click="Logs_Click" HorizontalAlignment="Right"/>
+                    <Button Content="Open log folder" Click="Logs_Click" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                 </Grid>
             </Border>
 
