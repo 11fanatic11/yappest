@@ -1,0 +1,72 @@
+<Window x:Class="Yappest.UI.ClipEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:ui="clr-namespace:Yappest.UI"
+        Title="Edit clip" Width="880" Height="640" MinWidth="720" MinHeight="520"
+        Background="{StaticResource Bg0}" WindowStartupLocation="CenterOwner"
+        Icon="pack://application:,,,/Assets/yappest.ico">
+    <Grid Margin="30,24,30,24">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <StackPanel>
+            <TextBlock x:Name="Heading" FontSize="20" FontWeight="SemiBold" FontFamily="{StaticResource DisplayFont}"/>
+            <TextBlock x:Name="Sub" Style="{StaticResource Dim}" Margin="0,4,0,0"/>
+        </StackPanel>
+
+        <ui:WaveformView x:Name="Wave" Grid.Row="1" Height="150" Margin="0,20,0,0"/>
+
+        <Grid Grid.Row="2" Margin="0,14,0,0">
+            <StackPanel Orientation="Horizontal">
+                <Button x:Name="PlayBtn" Style="{StaticResource AccentButton}" Click="Play_Click" Padding="16,9" MinWidth="116">
+                    <StackPanel Orientation="Horizontal">
+                        <TextBlock x:Name="PlayGlyph" Text="&#xE768;" Style="{StaticResource Glyph}" FontSize="13" Foreground="{DynamicResource AccentFgBrush}" Margin="0,0,8,0"/>
+                        <TextBlock x:Name="PlayText" Text="Play" Foreground="{DynamicResource AccentFgBrush}" FontWeight="SemiBold"/>
+                    </StackPanel>
+                </Button>
+                <Button Content="Select all" Click="SelectAll_Click" Style="{StaticResource GhostButton}" Margin="8,0,0,0"/>
+            </StackPanel>
+            <TextBlock x:Name="TimeText" HorizontalAlignment="Right" VerticalAlignment="Center" FontFamily="Consolas" Foreground="{StaticResource TextDim}"/>
+        </Grid>
+
+        <Border Grid.Row="3" Style="{StaticResource Panel}" Margin="0,18,0,0" Padding="18,14">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid Margin="0,0,0,10">
+                    <TextBlock Text="TRANSCRIPT" Style="{StaticResource SectionTitle}" VerticalAlignment="Center"/>
+                    <TextBlock Text="Click a word to select it, shift-click to extend." Style="{StaticResource Dim}" FontSize="12" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                </Grid>
+                <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                    <Grid>
+                        <WrapPanel x:Name="Words"/>
+                        <StackPanel x:Name="Notice" VerticalAlignment="Center" HorizontalAlignment="Center" Visibility="Collapsed" Margin="0,20,0,0">
+                            <TextBlock x:Name="NoticeText" Style="{StaticResource Dim}" HorizontalAlignment="Center" TextAlignment="Center" TextWrapping="Wrap"/>
+                            <Button x:Name="NoticeBtn" Margin="0,12,0,0" HorizontalAlignment="Center" Click="Notice_Click" Visibility="Collapsed"/>
+                        </StackPanel>
+                    </Grid>
+                </ScrollViewer>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Row="4" Margin="0,18,0,0">
+            <Button Content="Delete clip" Click="Delete_Click" Style="{StaticResource DangerButton}" HorizontalAlignment="Left"/>
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                <Button Content="Save trim as new clip" Click="SaveNew_Click" Margin="0,0,8,0"/>
+                <Button Content="Replace original" Click="Replace_Click" Margin="0,0,8,0"/>
+                <Button Content="Add to soundboard" Click="ToBoard_Click" Style="{StaticResource AccentButton}"/>
+            </StackPanel>
+        </Grid>
+
+        <Border x:Name="Busy" Grid.RowSpan="5" Background="#BB000000" Visibility="Collapsed" Margin="-30,-24">
+            <TextBlock x:Name="BusyText" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="15"/>
+        </Border>
+    </Grid>
+</Window>

@@ -1,0 +1,300 @@
+<UserControl x:Class="Yappest.Pages.SettingsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:Yappest.UI">
+    <UserControl.Resources>
+        <Style x:Key="RowTitle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
+            <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style x:Key="Group" TargetType="Border" BasedOn="{StaticResource Panel}">
+            <Setter Property="Margin" Value="0,0,0,18"/>
+            <Setter Property="Padding" Value="22,18"/>
+        </Style>
+        <Style x:Key="Rule" TargetType="Border">
+            <Setter Property="Height" Value="1"/>
+            <Setter Property="Background" Value="{StaticResource Line}"/>
+            <Setter Property="Margin" Value="0,14"/>
+        </Style>
+        <Style x:Key="Swatch" TargetType="RadioButton">
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FocusVisualStyle" Value="{x:Null}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="RadioButton">
+                        <Grid Width="32" Height="32" Margin="0,0,10,0" Background="Transparent">
+                            <Ellipse x:Name="Ring" Stroke="{StaticResource Text}" StrokeThickness="2" Opacity="0"/>
+                            <Ellipse Margin="4" Fill="{TemplateBinding Background}"/>
+                        </Grid>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsChecked" Value="True"><Setter TargetName="Ring" Property="Opacity" Value="1"/></Trigger>
+                            <Trigger Property="IsMouseOver" Value="True"><Setter TargetName="Ring" Property="Opacity" Value="0.5"/></Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </UserControl.Resources>
+
+    <ScrollViewer VerticalScrollBarVisibility="Auto" Padding="32,4,24,28">
+        <StackPanel MaxWidth="820" HorizontalAlignment="Left">
+
+            <!-- ============ AUDIO ============ -->
+            <Border Style="{StaticResource Group}">
+                <StackPanel>
+                    <TextBlock Text="AUDIO" Style="{StaticResource SectionTitle}" Margin="0,0,0,14"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="340"/></Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Microphone" Style="{StaticResource RowTitle}"/>
+                            <TextBlock Text="Your real mic. Yappest processes it and sends it to Yappest Input." Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <ComboBox x:Name="MicBox" Grid.Column="1" SelectionChanged="Mic_Changed"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="340"/></Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Playback" Style="{StaticResource RowTitle}"/>
+                            <TextBlock Text="Where you hear sounds, clip effects and yourself." Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <ComboBox x:Name="OutBox" Grid.Column="1" SelectionChanged="Out_Changed"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Yappest Input" Style="{StaticResource RowTitle}"/>
+                            <TextBlock x:Name="CableStatus" Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Button x:Name="CableBtn" Grid.Column="1" Content="Set up" Click="Cable_Click" Style="{StaticResource AccentButton}" MinWidth="130"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Initial setup" Style="{StaticResource RowTitle}"/>
+                            <TextBlock Text="Walks through your mic, headphones and Yappest Input again. Handy to double-check everything." Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="Run initial setup" Click="RunSetup_Click" MinWidth="150"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ============ CLIPPING ============ -->
+            <Border Style="{StaticResource Group}">
+                <StackPanel>
+                    <TextBlock Text="CLIPPING" Style="{StaticResource SectionTitle}" Margin="0,0,0,14"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="340"/></Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Clip length" Style="{StaticResource RowTitle}"/>
+                            <TextBlock x:Name="LenText" Style="{StaticResource Dim}" FontSize="12" Margin="0,2,0,0"/>
+                        </StackPanel>
+                        <Slider x:Name="LenSlider" Grid.Column="1" Minimum="5" Maximum="60" TickFrequency="5" IsSnapToTickEnabled="True" VerticalAlignment="Center" ValueChanged="Len_Changed"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Clip shortcut" Style="{StaticResource RowTitle}"/>
+                            <TextBlock x:Name="ClipKeyError" Foreground="{StaticResource Danger}" FontSize="12" Margin="0,2,0,0" Visibility="Collapsed"/>
+                        </StackPanel>
+                        <ui:HotkeyBox x:Name="ClipKey" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Record your microphone" Style="{StaticResource RowTitle}"/>
+                            <TextBlock Text="Your voice, with the voice changer applied." Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ClipMicSwitch" Style="{StaticResource Switch}" HorizontalAlignment="Right" Checked="Toggle_Changed" Unchecked="Toggle_Changed"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Record game and system audio" Style="{StaticResource RowTitle}"/>
+                            <TextBlock Text="Everything playing on your PC, including your soundboard." Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ClipSysSwitch" Style="{StaticResource Switch}" HorizontalAlignment="Right" Checked="Toggle_Changed" Unchecked="Toggle_Changed"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="340"/></Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="System audio device" Style="{StaticResource RowTitle}"/>
+                            <TextBlock Text="Which output Yappest listens to for game audio." Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0"/>
+                        </StackPanel>
+                        <ComboBox x:Name="SysBox" Grid.Column="1" SelectionChanged="Sys_Changed"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Toast notification" Style="{StaticResource RowTitle}"/>
+                            <TextBlock Text="A small banner in the top right corner when a clip is saved." Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ToastSwitch" Style="{StaticResource Switch}" HorizontalAlignment="Right" Checked="Toggle_Changed" Unchecked="Toggle_Changed"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Send the clip sound to Yappest Input" Style="{StaticResource RowTitle}"/>
+                            <TextBlock Text="Off by default, so only you hear the clip sound." Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0"/>
+                        </StackPanel>
+                        <CheckBox x:Name="ClipSoundSwitch" Style="{StaticResource Switch}" HorizontalAlignment="Right" Checked="Toggle_Changed" Unchecked="Toggle_Changed"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Clips folder" Style="{StaticResource RowTitle}"/>
+                            <TextBlock x:Name="FolderText" Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0" TextTrimming="CharacterEllipsis" MaxWidth="480"/>
+                        </StackPanel>
+                        <Button Grid.Column="1" Content="Change…" Click="Folder_Click"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Speech model" Style="{StaticResource RowTitle}"/>
+                            <TextBlock x:Name="ModelText" Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Button x:Name="ModelBtn" Grid.Column="1" Content="Download" Click="Model_Click" MinWidth="110"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ============ SHORTCUTS ============ -->
+            <Border Style="{StaticResource Group}">
+                <StackPanel>
+                    <TextBlock Text="SHORTCUTS" Style="{StaticResource SectionTitle}" Margin="0,0,0,14"/>
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Mute / unmute microphone" Style="{StaticResource RowTitle}"/>
+                            <TextBlock x:Name="MuteKeyError" Foreground="{StaticResource Danger}" FontSize="12" Margin="0,2,0,0" Visibility="Collapsed"/>
+                        </StackPanel>
+                        <ui:HotkeyBox x:Name="MuteKey" HorizontalAlignment="Right"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Stop all sounds" Style="{StaticResource RowTitle}"/>
+                            <TextBlock x:Name="StopKeyError" Foreground="{StaticResource Danger}" FontSize="12" Margin="0,2,0,0" Visibility="Collapsed"/>
+                        </StackPanel>
+                        <ui:HotkeyBox x:Name="StopKey" HorizontalAlignment="Right"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ============ APPEARANCE ============ -->
+            <Border Style="{StaticResource Group}">
+                <StackPanel>
+                    <TextBlock Text="APPEARANCE" Style="{StaticResource SectionTitle}" Margin="0,0,0,14"/>
+                    <TextBlock Text="Theme colour" Style="{StaticResource RowTitle}"/>
+                    <TextBlock Text="Used for buttons, switches, highlights and the toast." Style="{StaticResource Dim}" FontSize="12" Margin="0,2,0,14"/>
+                    <StackPanel Orientation="Horizontal" x:Name="Swatches"/>
+                    <StackPanel Orientation="Horizontal" Margin="0,16,0,0">
+                        <TextBox x:Name="HexBox" Width="120" FontFamily="Consolas" MaxLength="9" TextChanged="Hex_Changed"/>
+                        <Button Content="Pick…" Click="PickColor_Click" Margin="10,0,0,0"/>
+                        <Button Content="Reset" Click="ResetColor_Click" Style="{StaticResource GhostButton}" Margin="6,0,0,0"/>
+                    </StackPanel>
+                </StackPanel>
+            </Border>
+
+            <!-- ============ GENERAL ============ -->
+            <Border Style="{StaticResource Group}">
+                <StackPanel>
+                    <TextBlock Text="GENERAL" Style="{StaticResource SectionTitle}" Margin="0,0,0,14"/>
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Start with Windows" Style="{StaticResource RowTitle}"/>
+                            <TextBlock Text="Yappest starts quietly in the tray so your hotkeys and Stream Deck always work." Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <CheckBox x:Name="StartupSwitch" Style="{StaticResource Switch}" HorizontalAlignment="Right" Checked="Toggle_Changed" Unchecked="Toggle_Changed"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Keep running when closed" Style="{StaticResource RowTitle}"/>
+                            <TextBlock Text="Closing the window sends Yappest to the tray (the hidden icons arrow). Quit from the tray menu." Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <CheckBox x:Name="TraySwitch" Style="{StaticResource Switch}" HorizontalAlignment="Right" Checked="Toggle_Changed" Unchecked="Toggle_Changed"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ============ INTEGRATIONS ============ -->
+            <Border Style="{StaticResource Group}">
+                <StackPanel>
+                    <TextBlock Text="INTEGRATIONS" Style="{StaticResource SectionTitle}" Margin="0,0,0,14"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Stream Deck" Style="{StaticResource RowTitle}"/>
+                            <TextBlock x:Name="SdStatus" Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Button x:Name="SdBtn" Grid.Column="1" Content="Install plugin" Click="Sd_Click" MinWidth="130"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="340"/></Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Voicemod API key" Style="{StaticResource RowTitle}"/>
+                            <TextBlock FontSize="12" Style="{StaticResource Dim}" Margin="0,2,16,0" TextWrapping="Wrap"
+                                       Text="Optional. With a key, importing also brings over your soundboard names and icons. Voicemod hands out free keys by email on its developer page."/>
+                        </StackPanel>
+                        <TextBox x:Name="VmKey" Grid.Column="1" FontFamily="Consolas" VerticalAlignment="Center" TextChanged="VmKey_Changed"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Import from Voicemod" Style="{StaticResource RowTitle}"/>
+                            <TextBlock x:Name="VmText" Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Button x:Name="VmBtn" Grid.Column="1" Content="Import…" Click="Vm_Click" MinWidth="110"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ============ UPDATES ============ -->
+            <Border Style="{StaticResource Group}">
+                <StackPanel>
+                    <TextBlock Text="UPDATES" Style="{StaticResource SectionTitle}" Margin="0,0,0,14"/>
+                    <Grid>
+                        <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock x:Name="VersionText" Style="{StaticResource RowTitle}"/>
+                            <TextBlock x:Name="UpdateNote" Text="Updates are always your choice." Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <Button x:Name="UpdateBtn" Grid.Column="1" Content="Check for updates" Click="CheckUpdate_Click" MinWidth="150"/>
+                    </Grid>
+                    <Border Style="{StaticResource Rule}"/>
+                    <Grid>
+                        <StackPanel VerticalAlignment="Center">
+                            <TextBlock Text="Ask me when a new version is out" Style="{StaticResource RowTitle}"/>
+                            <TextBlock Text="Checks when Yappest starts and shows a prompt. Nothing installs unless you say yes." Style="{StaticResource Dim}" FontSize="12" Margin="0,2,16,0" TextWrapping="Wrap"/>
+                        </StackPanel>
+                        <CheckBox x:Name="AutoUpdateSwitch" Style="{StaticResource Switch}" HorizontalAlignment="Right" Checked="Toggle_Changed" Unchecked="Toggle_Changed"/>
+                    </Grid>
+                </StackPanel>
+            </Border>
+
+            <!-- ============ ABOUT ============ -->
+            <Border Style="{StaticResource Group}">
+                <Grid>
+                    <StackPanel>
+                        <TextBlock Text="Yappest" Style="{StaticResource RowTitle}"/>
+                        <TextBlock Text="Free voice changer, soundboard and clipper." Style="{StaticResource Dim}" FontSize="12" Margin="0,2,0,0"/>
+                    </StackPanel>
+                    <Button Content="Open log folder" Click="Logs_Click" HorizontalAlignment="Right"/>
+                </Grid>
+            </Border>
+
+            <TextBlock Text="© 2026 Fanatic" Style="{StaticResource Dim}" FontSize="12" HorizontalAlignment="Center" Margin="0,6,0,10"/>
+        </StackPanel>
+    </ScrollViewer>
+</UserControl>

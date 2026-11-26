@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Yappest</title>
+  <style>
+    html, body { margin: 0; background: #2d2d2d; color: #d8d8d8; font-family: "Segoe UI", sans-serif; font-size: 13px; }
+    .wrap { padding: 12px 14px; }
+    .row { display: flex; align-items: center; margin-bottom: 10px; }
+    .label { width: 78px; color: #9a9a9a; flex-shrink: 0; }
+    select { flex: 1; background: #1f1f1f; color: #eee; border: 1px solid #444; border-radius: 4px; padding: 5px 6px; font: inherit; min-width: 0; }
+    select:focus { outline: none; border-color: #fcc603; }
+    .note { color: #9a9a9a; font-size: 12px; line-height: 1.4; }
+    .warn { color: #fcc603; }
+    .hidden { display: none; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div id="soundUI" class="hidden">
+      <div class="row"><div class="label">Board</div><select id="board"></select></div>
+      <div class="row"><div class="label">Sound</div><select id="sound"></select></div>
+      <div class="note" id="soundNote"></div>
+    </div>
+    <div id="effectUI" class="hidden">
+      <div class="row"><div class="label">Voice</div>
+        <select id="effect"><option value="pitch">Pitch</option></select>
+      </div>
+      <div class="note">Pressing the key switches to this voice and turns the voice changer on.</div>
+    </div>
+  </div>
+
+  <script>
+    let ws, uuid, action, context, settings = {}, boards = [];
+
+    function connectElgatoStreamDeckSocket(port, inUUID, registerEvent, info, actionInfo) {
+      uuid = inUUID;
+      const ai = JSON.parse(actionInfo);
+      action = ai.action; context = ai.context; settings = ai.payload.settings || {};
+      document.getElementById('soundUI').classList.toggle('hidden', action !== 'com.yappest.sound');
+      document.getElementById('effectUI').classList.toggle('hidden', action !== 'com.yappest.effect');
+
+      ws = new WebSocket('ws://127.0.0.1:' + port);
+      ws.onopen = () => {
+        ws.send(JSON.stringify({ event: registerEvent, uuid }));
+        requestSounds();
+      };
+      ws.onmessage = (evt) => {
+        const m = JSON.parse(evt.data);
+        if (m.event === 'sendToPropertyInspector') {
+          boards = (m.payload && m.payload.boards) || [];
+          if (action === 'com.yappest.effect') fillEffects(m.payload && m.payload.effects);
+          else fillBoards(m.payload && m.payload.connected);
+        } else if (m.event === 'didReceiveSettings') {
+          settings = m.payload.settings || {};
+        }
+      };
+    }
+
+    function fillEffects(list) {
+      const sel = document.getElementById('effect');
+      if (!list || !list.length) return;
+      sel.innerHTML = '';
+      list.forEach(e => { const o = document.createElement('option'); o.value = e.id; o.textContent = e.name; sel.appendChild(o); });
+      sel.value = settings.effect || 'pitch';
+    }
+
+    function requestSounds() {
+      ws.send(JSON.stringify({ event: 'sendToPlugin', action, context: uuid, payload: { request: 'sounds' } }));
+    }
+
+    function save() { ws.send(JSON.stringify({ event: 'setSettings', context: uuid, payload: settings })); }
+
+    const boardSel = document.getElementById('board');
+    const soundSel = document.getElementById('sound');
+
+    function fillBoards(connected) {
+      const note = document.getElementById('soundNote');
+      if (connected === false) { note.innerHTML = '<span class="warn">Yappest isn\'t running.</span> Start it to pick a sound.'; }
+      else if (!boards.length) { note.textContent = 'Add sounds in Yappest first.'; }
+      else note.textContent = '';
+      boardSel.innerHTML = '';
+      let selBoard = boards.find(b => b.sounds.some(s => s.id === settings.soundId)) || boards[0];
+      boards.forEach(b => { const o = document.createElement('option'); o.value = b.id; o.textContent = b.name; if (b === selBoard) o.selected = true; boardSel.appendChild(o); });
+      fillSounds();
+    }
+
+    function fillSounds() {
+      const b = boards.find(x => x.id === boardSel.value);
+      soundSel.innerHTML = '';
+      if (!b) return;
+      b.sounds.forEach(s => { const o = document.createElement('option'); o.value = s.id; o.textContent = s.name; if (s.id === settings.soundId) o.selected = true; soundSel.appendChild(o); });
+      if (!b.sounds.some(s => s.id === settings.soundId) && b.sounds.length) { settings.soundId = b.sounds[0].id; save(); }
+    }
+
+    boardSel.onchange = () => { settings.soundId = undefined; fillSounds(); save(); };
+    soundSel.onchange = () => { settings.soundId = soundSel.value; save(); };
+    document.getElementById('effect').onchange = (e) => { settings.effect = e.target.value; save(); };
+  </script>
+</body>
+</html>

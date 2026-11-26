@@ -1,0 +1,19 @@
+# build output
+bin/
+obj/
+dist/
+installer/Output/
+*.bak
+*.user
+.vs/
+
+# the site and update feed live in their own repo (yappest.fanaticdev.xyz)
+yappest.fanaticdev.xyz/
+
+# large or third-party binaries that are fetched, not stored here
+vendor/models/
+vendor/vbcable/
+
+# local scratch
+scratch/
+*.log

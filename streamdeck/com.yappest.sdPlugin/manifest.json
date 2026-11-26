@@ -1,0 +1,87 @@
+{
+  "SDKVersion": 2,
+  "Name": "Yappest",
+  "Author": "Yappest",
+  "Description": "Control Yappest from your Stream Deck: play soundboard sounds, clip the last seconds, mute your mic and switch voice changers.",
+  "Version": "0.1.0.0",
+  "CodePath": "app.html",
+  "Icon": "icons/plugin",
+  "Category": "Yappest",
+  "CategoryIcon": "icons/category",
+  "URL": "",
+  "Software": { "MinimumVersion": "5.0" },
+  "OS": [ { "Platform": "windows", "MinimumVersion": "10" } ],
+  "ApplicationsToMonitor": { "windows": [ "Yappest.exe" ] },
+  "Actions": [
+    {
+      "UUID": "com.yappest.sound",
+      "Name": "Play Sound",
+      "Tooltip": "Plays a sound from your Yappest soundboard.",
+      "Icon": "icons/sound-list",
+      "Controllers": [ "Keypad" ],
+      "PropertyInspectorPath": "pi.html",
+      "States": [ { "Image": "icons/sound", "TitleAlignment": "bottom", "FontSize": "11", "ShowTitle": true } ]
+    },
+    {
+      "UUID": "com.yappest.clip",
+      "Name": "Clip Recent Audio",
+      "Tooltip": "Saves the last seconds of audio as a clip. The length is set in Yappest.",
+      "Icon": "icons/clip-list",
+      "Controllers": [ "Keypad" ],
+      "States": [ { "Image": "icons/clip", "ShowTitle": false } ]
+    },
+    {
+      "UUID": "com.yappest.mute",
+      "Name": "Mute Microphone",
+      "Tooltip": "Mutes and unmutes your microphone.",
+      "Icon": "icons/mute-list",
+      "Controllers": [ "Keypad" ],
+      "States": [
+        { "Image": "icons/mic-live", "ShowTitle": false },
+        { "Image": "icons/mic-muted", "ShowTitle": false }
+      ]
+    },
+    {
+      "UUID": "com.yappest.stop",
+      "Name": "Stop All Sounds",
+      "Tooltip": "Stops every sound that is playing.",
+      "Icon": "icons/stop-list",
+      "Controllers": [ "Keypad" ],
+      "States": [ { "Image": "icons/stop", "ShowTitle": false } ]
+    },
+    {
+      "UUID": "com.yappest.voicechanger",
+      "Name": "Voice Changer On/Off",
+      "Tooltip": "Turns the voice changer on or off.",
+      "Icon": "icons/vc-list",
+      "Controllers": [ "Keypad" ],
+      "States": [
+        { "Image": "icons/vc-off", "ShowTitle": false },
+        { "Image": "icons/vc-on", "ShowTitle": false }
+      ]
+    },
+    {
+      "UUID": "com.yappest.effect",
+      "Name": "Select Voice",
+      "Tooltip": "Switches to Pitch or Sound Barrier and turns the voice changer on.",
+      "Icon": "icons/effect-list",
+      "Controllers": [ "Keypad" ],
+      "PropertyInspectorPath": "pi.html",
+      "States": [
+        { "Image": "icons/effect", "TitleAlignment": "bottom", "FontSize": "11", "ShowTitle": true },
+        { "Image": "icons/effect-active", "TitleAlignment": "bottom", "FontSize": "11", "ShowTitle": true }
+      ]
+    },
+    {
+      "UUID": "com.yappest.hear",
+      "Name": "Hear Myself",
+      "Tooltip": "Plays your processed mic in your headphones.",
+      "Icon": "icons/hear-list",
+      "Controllers": [ "Keypad" ],
+      "States": [
+        { "Image": "icons/hear-off", "ShowTitle": false },
+        { "Image": "icons/hear-on", "ShowTitle": false }
+      ]
+    }
+  ]
+}

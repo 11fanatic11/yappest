@@ -1,0 +1,80 @@
+<Window x:Class="Yappest.UI.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:pages="clr-namespace:Yappest.Pages"
+        Title="Yappest" Width="1100" Height="740" MinWidth="960" MinHeight="640"
+        Background="{StaticResource Bg0}" WindowStartupLocation="CenterScreen"
+        Icon="pack://application:,,,/Assets/yappest.ico" UseLayoutRounding="True" SnapsToDevicePixels="True">
+    <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="84"/>
+            <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+
+        <!-- rail -->
+        <Border Background="{StaticResource Bg1}" BorderBrush="{StaticResource Line}" BorderThickness="0,0,1,0">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Border Width="44" Height="44" CornerRadius="11" Margin="0,18,0,22" Background="{DynamicResource AccentBrush}">
+                    <Border.Clip><RectangleGeometry Rect="0,0,44,44" RadiusX="11" RadiusY="11"/></Border.Clip>
+                    <Image Source="pack://application:,,,/Assets/yappest.png" Stretch="UniformToFill" RenderOptions.BitmapScalingMode="HighQuality"/>
+                </Border>
+                <StackPanel Grid.Row="1">
+                    <RadioButton x:Name="NavVoice" GroupName="nav" Style="{StaticResource NavItem}" Content="Voice" Tag="&#xE720;" IsChecked="True" Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavSounds" GroupName="nav" Style="{StaticResource NavItem}" Content="Sounds" Tag="&#xE767;" Checked="Nav_Checked"/>
+                    <RadioButton x:Name="NavClips" GroupName="nav" Style="{StaticResource NavItem}" Content="Clips" Tag="&#xE8B2;" Checked="Nav_Checked"/>
+                </StackPanel>
+                <RadioButton Grid.Row="2" x:Name="NavSettings" GroupName="nav" Style="{StaticResource NavItem}" Content="Settings" Tag="&#xE713;" Margin="0,0,0,10" Checked="Nav_Checked"/>
+            </Grid>
+        </Border>
+
+        <Grid Grid.Column="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="72"/>
+                <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+
+            <!-- top bar -->
+            <Grid Margin="32,0,28,0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <TextBlock x:Name="PageTitle" Style="{StaticResource PageTitle}" VerticalAlignment="Center" Text="Voice"/>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
+                    <Border x:Name="CableChip" CornerRadius="14" Padding="11,6" Background="{StaticResource Bg2}" BorderBrush="{StaticResource Line}" BorderThickness="1" Margin="0,0,14,0">
+                        <StackPanel Orientation="Horizontal">
+                            <Ellipse x:Name="CableDot" Width="8" Height="8" Fill="{StaticResource Ok}" Margin="0,0,8,0" VerticalAlignment="Center"/>
+                            <TextBlock x:Name="CableText" Text="Yappest Input ready" FontSize="12" Foreground="{StaticResource TextDim}"/>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- mic meter -->
+                    <Border Width="96" Height="8" CornerRadius="4" Background="{StaticResource Bg3}" Margin="0,0,14,0" ClipToBounds="True" ToolTip="Microphone level">
+                        <Border x:Name="MeterFill" HorizontalAlignment="Left" Width="0" CornerRadius="4" Background="{DynamicResource AccentBrush}"/>
+                    </Border>
+
+                    <Button x:Name="MuteBtn" Click="Mute_Click" Padding="14,8" ToolTip="Mute or unmute your microphone">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock x:Name="MuteGlyph" Style="{StaticResource Glyph}" Text="&#xE720;" Margin="0,0,8,0"/>
+                            <TextBlock x:Name="MuteText" Text="Mic live" FontWeight="SemiBold"/>
+                        </StackPanel>
+                    </Button>
+                </StackPanel>
+            </Grid>
+
+            <!-- pages -->
+            <Grid Grid.Row="1">
+                <pages:VoicePage x:Name="VoiceView"/>
+                <pages:SoundboardPage x:Name="SoundsView" Visibility="Collapsed"/>
+                <pages:ClipsPage x:Name="ClipsView" Visibility="Collapsed"/>
+                <pages:SettingsPage x:Name="SettingsView" Visibility="Collapsed"/>
+            </Grid>
+        </Grid>
+    </Grid>
+</Window>

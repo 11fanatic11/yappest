@@ -1,0 +1,108 @@
+<UserControl x:Class="Yappest.Pages.ClipsPage"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="clr-namespace:Yappest.UI">
+    <UserControl.Resources>
+        <ui:UrlToImageConverter x:Key="UrlToImage"/>
+        <ui:NullToCollapsedConverter x:Key="Vis"/>
+    </UserControl.Resources>
+
+    <Grid Margin="32,4,24,0">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+
+        <!-- quick settings strip -->
+        <Border Style="{StaticResource Panel}" Padding="20,14" Margin="0,0,6,18">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="CLIP LENGTH" Style="{StaticResource SectionTitle}"/>
+                    <TextBlock x:Name="LenText" FontSize="20" FontWeight="SemiBold" FontFamily="{StaticResource DisplayFont}" Margin="0,2,0,0"/>
+                </StackPanel>
+                <Slider x:Name="LenSlider" Grid.Column="1" Minimum="5" Maximum="60" TickFrequency="5" IsSnapToTickEnabled="True" Margin="26,0,26,0" VerticalAlignment="Center" ValueChanged="Len_Changed"/>
+                <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Center">
+                    <ui:HotkeyBox x:Name="ClipKey" Width="180" Margin="0,0,12,0" ToolTip="Click, then hold the keys you want"/>
+                    <Button Style="{StaticResource AccentButton}" Click="ClipNow_Click" Content="Clip now" Margin="0,0,8,0"/>
+                    <Button Style="{StaticResource IconButton}" Content="&#xED25;" ToolTip="Open clips folder" Click="OpenFolder_Click"/>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="0,0,6,0">
+            <Grid>
+                <ItemsControl x:Name="List">
+                    <ItemsControl.ItemTemplate>
+                        <DataTemplate>
+                            <Border Padding="14" Margin="0,0,0,10">
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource Panel}">
+                                        <Style.Triggers>
+                                            <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                                <Setter Property="BorderBrush" Value="{DynamicResource AccentBrush}"/>
+                                                <Setter Property="Background" Value="{DynamicResource AccentSoftBrush}"/>
+                                                <Setter Property="BorderThickness" Value="1.5"/>
+                                            </DataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Border Width="54" Height="54" CornerRadius="11" Background="{StaticResource Bg4}" VerticalAlignment="Top">
+                                        <Border.Clip><RectangleGeometry Rect="0,0,54,54" RadiusX="11" RadiusY="11"/></Border.Clip>
+                                        <Grid>
+                                            <TextBlock Text="&#xE7FC;" Style="{StaticResource Glyph}" FontSize="22" Foreground="{StaticResource TextFaint}"/>
+                                            <Image Source="{Binding GameIconUrl, Converter={StaticResource UrlToImage}}" Stretch="UniformToFill"/>
+                                        </Grid>
+                                    </Border>
+                                    <StackPanel Grid.Column="1" Margin="16,0,12,0" VerticalAlignment="Center">
+                                        <StackPanel Orientation="Horizontal">
+                                            <TextBlock Text="{Binding Game}" FontWeight="SemiBold" FontSize="14"/>
+                                            <TextBlock Text="{Binding DurationText}" Style="{StaticResource Dim}" Margin="10,1,0,0" FontFamily="Consolas" FontSize="12"/>
+                                        </StackPanel>
+                                        <TextBlock Text="{Binding Title}" Style="{StaticResource Dim}" FontSize="12" Margin="0,2,0,0"/>
+                                        <TextBlock Text="{Binding Preview}" Foreground="{StaticResource TextDim}" Margin="0,8,0,0" TextWrapping="Wrap" MaxHeight="40" TextTrimming="CharacterEllipsis"/>
+                                    </StackPanel>
+                                    <StackPanel Grid.Column="2" Orientation="Horizontal" VerticalAlignment="Top">
+                                        <Button Click="Play_Click" Tag="{Binding}">
+                                            <Button.Style>
+                                                <Style TargetType="Button" BasedOn="{StaticResource IconButton}">
+                                                    <Setter Property="Content" Value="&#xE768;"/>
+                                                    <Setter Property="ToolTip" Value="Play in your headphones"/>
+                                                    <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding IsPlaying}" Value="True">
+                                                            <Setter Property="Content" Value="&#xE769;"/>
+                                                            <Setter Property="ToolTip" Value="Pause"/>
+                                                            <Setter Property="Foreground" Value="{DynamicResource AccentBrush}"/>
+                                                        </DataTrigger>
+                                                    </Style.Triggers>
+                                                </Style>
+                                            </Button.Style>
+                                        </Button>
+                                        <Button Style="{StaticResource IconButton}" Content="&#xE70F;" ToolTip="Edit and trim" Click="Edit_Click" Tag="{Binding}"/>
+                                        <Button Style="{StaticResource IconButton}" Content="&#xE74D;" ToolTip="Delete" Click="Delete_Click" Tag="{Binding}"/>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                </ItemsControl>
+
+                <StackPanel x:Name="Empty" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,70,0,0" Visibility="Collapsed">
+                    <TextBlock Text="&#xE8B2;" Style="{StaticResource Glyph}" FontSize="40" Foreground="{StaticResource TextFaint}"/>
+                    <TextBlock Text="No clips yet" FontSize="16" FontWeight="SemiBold" Margin="0,14,0,0" HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="EmptyHint" Style="{StaticResource Dim}" Margin="0,6,0,0" HorizontalAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+    </Grid>
+</UserControl>
