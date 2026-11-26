@@ -45,8 +45,13 @@ public sealed class AudioEngine : IDisposable
 
     AudioEngine()
     {
-        _cableSounds.SoundEnded += id => SoundStateChanged?.Invoke(id, IsSoundPlaying(id));
-        _monitorSounds.SoundEnded += id => { if (id == PreviewId) PreviewEnded?.Invoke(); };
+        // a sound is "playing" while either copy (Yappest Input or your headphones) is still going; both ending clears the highlight
+        _cableSounds.SoundEnded += id => SetPlaying(id, IsSoundPlaying(id));
+        _monitorSounds.SoundEnded += id =>
+        {
+            if (id == PreviewId) PreviewEnded?.Invoke();
+            else SetPlaying(id, IsSoundPlaying(id));
+        };
         Settings.Changed += ApplyLiveSettings;
     }
 
@@ -269,8 +274,7 @@ public sealed class AudioEngine : IDisposable
             float vol = (float)item.Volume;
             _cableSounds.Play(data, vol, item.Id);
             _monitorSounds.Play(data, vol, item.Id);
-            item.Playing = true;
-            SoundStateChanged?.Invoke(item.Id, true);
+            SetPlaying(item.Id, true, item);
             return true;
         }
         catch (Exception ex)
@@ -280,11 +284,19 @@ public sealed class AudioEngine : IDisposable
         }
     }
 
+    /// <summary>Keeps a sound's highlight (SoundItem.Playing) and the Stream Deck in step with what is actually playing.</summary>
+    void SetPlaying(string id, bool playing, SoundItem? item = null)
+    {
+        item ??= SoundLibrary.Instance.Find(id);
+        if (item != null && item.Playing != playing) item.Playing = playing;
+        SoundStateChanged?.Invoke(id, playing);
+    }
+
     public void StopSound(string id)
     {
         _cableSounds.Stop(id);
         _monitorSounds.Stop(id);
-        SoundStateChanged?.Invoke(id, false);
+        SetPlaying(id, false);
     }
 
     public bool IsSoundPlaying(string id) => _cableSounds.IsPlaying(id) || _monitorSounds.IsPlaying(id);
@@ -294,7 +306,7 @@ public sealed class AudioEngine : IDisposable
         var ids = _cableSounds.PlayingIds.Concat(_monitorSounds.PlayingIds).Distinct().ToList();
         _cableSounds.StopAll();
         _monitorSounds.StopAll();
-        foreach (var id in ids) SoundStateChanged?.Invoke(id, false);
+        foreach (var id in ids) SetPlaying(id, false);
     }
 
     const string PreviewId = "__preview__";

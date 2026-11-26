@@ -202,6 +202,27 @@ public static class SelfTest
             Check("mic ring is filling in real time", micTail.Length >= rate * 3 * 0.9, $"{micTail.Length} of {rate * 3} samples, rms {Rms(micTail):0.0000}");
             Check("system loopback ring is filling in real time", sysTail.Length >= rate * 2 * 3 * 0.9, $"{sysTail.Length / 2} of {rate * 3} frames, rms {Rms(sysTail):0.0000}, captured {ClipRecorder.Instance.FramesCaptured}");
 
+            // ---- a sound tile is highlighted only while its sound plays (silent: volume 0, so nothing is heard)
+            {
+                var libp = SoundLibrary.Instance; libp.Load();
+                var pb = libp.AddBoard("selftest-playing");
+                string wav = Path.Combine(AppContext.BaseDirectory, "playing-test.wav");
+                using (var w = new WaveFileWriter(wav, new WaveFormat(44100, 16, 1)))
+                { var b = new byte[44100 * 2 * 2]; for (int i = 0; i < b.Length / 2; i++) BitConverter.GetBytes((short)(6000 * Math.Sin(i * 0.04))).CopyTo(b, i * 2); w.Write(b, 0, b.Length); }   // 2 s
+                var snd = libp.AddSound(pb, wav, "ping")!; snd.Volume = 0;
+                eng.PlaySound(snd);
+                bool onAtStart = snd.Playing;
+                Thread.Sleep(2900);
+                Check("highlight turns on when a sound starts and off when it ends by itself", onAtStart && !snd.Playing, $"on at start: {onAtStart}, still on after it ended: {snd.Playing}");
+                eng.PlaySound(snd); Thread.Sleep(300);
+                eng.StopSound(snd.Id);
+                Check("highlight clears when a sound is stopped", !snd.Playing);
+                eng.PlaySound(snd); Thread.Sleep(300);
+                eng.StopAllSounds();
+                Check("highlight clears on stop all", !snd.Playing);
+                libp.RemoveBoard(pb); File.Delete(wav);
+            }
+
             // ---- Stream Deck control socket round trip
             StreamDeckServer.Instance.Start();
             using (var ws = new System.Net.WebSockets.ClientWebSocket())
